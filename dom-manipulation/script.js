@@ -567,7 +567,7 @@ async function syncQuotes() {
         } else {
             // No conflicts, update local storage with server data
             updateLocalStorageWithServerData(serverQuotes);
-            showNotificationForUpdates('Quotes synced successfully from server');
+            showNotificationForUpdates('Quotes synced with server!');
         }
         
         // Post local quotes to server
