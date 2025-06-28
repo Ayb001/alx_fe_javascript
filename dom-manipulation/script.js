@@ -162,10 +162,24 @@ function filterQuotes() {
     const categoryFilter = document.getElementById('categoryFilter');
     if (!categoryFilter) return;
     
-    currentFilter = categoryFilter.value;
+    const selectedCategory = categoryFilter.value;
+    currentFilter = selectedCategory;
     saveCurrentFilter();
     
-    console.log('Filtering quotes by category:', currentFilter);
+    console.log('Filtering quotes by selectedCategory:', selectedCategory);
+    
+    // Filter and update the displayed quotes based on the selected category
+    let filteredQuotes = quotes;
+    if (selectedCategory !== 'all') {
+        filteredQuotes = quotes.filter(quote => quote.category.toLowerCase() === selectedCategory.toLowerCase());
+    }
+    
+    // Update the displayed quotes based on the selected category
+    if (filteredQuotes.length === 0) {
+        const quoteDisplay = document.getElementById('quoteDisplay');
+        quoteDisplay.innerHTML = `<div class="quote-text">No quotes available for selectedCategory: ${selectedCategory}</div>`;
+        return;
+    }
     
     // Show a random quote from the filtered selection
     showRandomQuote();
