@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Quote Generator - With Server Sync</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      text-align: center;
+      color: #4a5568;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #quoteDisplay {
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-left: 5px solid #667eea;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    #quoteDisplay:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .quote-text {
+      font-size: 1.3rem;
+      font-style: italic;
+      line-height: 1.6;
+      text-align: center;
+      color: #2d3748;
+    }
+
+    .quote-category {
+      font-size: 0.9rem;
+      color: #667eea;
+      font-weight: 600;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .filter-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border: 2px solid #e2e8f0;
+    }
+
+    .filter-section h3 {
+      margin-bottom: 15px;
+      color: #4a5568;
+      font-size: 1.2rem;
+    }
+
+    #categoryFilter {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #categoryFilter:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .file-section {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 15px;
+      margin: 20px 0;
+      border: 2px dashed #cbd5e0;
+    }
+
+    .file-section h3 {
+      margin-bottom: 15px;
+      color: #4a5568;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .add-quote-form {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 25px;
+      margin-top: 20px;
+      border: 2px dashed #cbd5e0;
+      transition: all 0.3s ease;
+    }
+
+    .add-quote-form.visible {
+      border-color: #667eea;
+      background: #edf2f7;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .session-info {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 15px 0;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+    }
+
+    .storage-info {
+      text-align: center;
+      color: #718096;
+      font-size: 0.9rem;
+      margin-top: 20px;
+      padding: 15px;
+      background: #edf2f7;
+      border-radius: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .quote-text {
+        font-size: 1.1rem;
+      }
+      
+      .controls {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      button {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dynamic Quote Generator</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 20px;">
+      📡 <strong>Enhanced with Server Synchronization</strong>
+    </p>
+    
+    <div id="quoteDisplay">
+      <div class="quote-text">Click "Show New Quote" to get started!</div>
+    </div>
+    
+    <div class="filter-section">
+      <h3>Filter by Category</h3>
+      <select id="categoryFilter" onchange="filterQuotes()">
+        <option value="all">All Categories</option>
+        <!-- Dynamically populated categories -->
+      </select>
+    </div>
+    
+    <div class="session-info" id="sessionInfo" style="display: none;">
+      <strong>Last Viewed Quote:</strong> <span id="lastViewed">None</span>
+    </div>
+    
+    <div class="controls">
+      <button id="newQuote">Show New Quote</button>
+      <button id="addQuoteBtn">Add New Quote</button>
+      <button id="exportQuotes">Export Quotes</button>
+      <button id="clearQuotes">Clear All Quotes</button>
+    </div>
+    
+    <!-- Server sync controls will be inserted here by server-sync.js -->
+    
+    <div class="file-section">
+      <h3>Import Quotes from JSON File</h3>
+      <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+      <p><small>Upload a JSON file containing quotes to import them into your collection.</small></p>
+    </div>
+    
+    <div id="addQuoteForm" class="add-quote-form hidden">
+      <h3 style="margin-bottom: 15px; color: #4a5568;">Add Your Own Quote</h3>
+      <div class="form-group">
+        <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
+      </div>
+      <div class="form-group">
+        <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+      </div>
+      <div class="form-controls">
+        <button onclick="addQuote()">Add Quote</button>
+        <button onclick="cancelAddQuote()">Cancel</button>
+      </div>
+    </div>
+    
+    <div class="storage-info">
+      <p><strong>Total Quotes:</strong> <span id="quoteCount">0</span> | Stored in Local Storage</p>
+      <p><strong>Current Filter:</strong> <span id="currentFilter">All Categories</span></p>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+  <script src="server-sync.js"></script>
+</body>
+</html>
